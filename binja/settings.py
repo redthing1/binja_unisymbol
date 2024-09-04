@@ -17,3 +17,29 @@ my_settings.register_setting(
         }
     ),
 )
+
+# bool: treat all Ghidra symbols as auto-analysis
+my_settings.register_setting(
+    "unisymbol.ghidra_symbols_as_auto_analysis",
+    json.dumps(
+        {
+            "title": "Treat Ghidra Symbols as Auto-Analysis",
+            "description": "Treat all imported Ghidra symbols as auto-analysis.",
+            "default": False,
+            "type": "boolean",
+        }
+    ),
+)
+
+# bool: treat all IDA symbols as auto-analysis
+my_settings.register_setting(
+    "unisymbol.ida_symbols_as_auto_analysis",
+    json.dumps(
+        {
+            "title": "Treat IDA Symbols as Auto-Analysis",
+            "description": "Treat all imported IDA symbols as auto-analysis.",
+            "default": False,
+            "type": "boolean",
+        }
+    ),
+)

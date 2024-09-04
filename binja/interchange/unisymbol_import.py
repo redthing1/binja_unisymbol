@@ -7,14 +7,32 @@ from enum import Enum
 from binaryninja import *
 
 from ..models import UniSymbol
+from ..settings import my_settings
 
 
 def read_unisymbols(input_path: Path) -> List[UniSymbol]:
     """read symbols from the unisymbol csv file"""
     symbols = []
+
+    ida_symbols_force_auto = my_settings.get_bool(
+        "unisymbol.ida_symbols_as_auto_analysis"
+    )
+    ghidra_symbols_force_auto = my_settings.get_bool(
+        "unisymbol.ghidra_symbols_as_auto_analysis"
+    )
+
+    def apply_corrections(row: dict):
+        if row["source"] == "ida" and ida_symbols_force_auto:
+            row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
+        if row["source"] == "ghidra" and ghidra_symbols_force_auto:
+            row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
+        return row
+
     with open(input_path) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
+            row = apply_corrections(row)
+
             symbol = UniSymbol(
                 name=row["name"],
                 addr=int(row["addr"], 16),
@@ -23,6 +41,7 @@ def read_unisymbols(input_path: Path) -> List[UniSymbol]:
                 source=row["source"],
                 reason=UniSymbol.SymbolReason[row["reason"]],
             )
+
             symbols.append(symbol)
     return symbols
 
