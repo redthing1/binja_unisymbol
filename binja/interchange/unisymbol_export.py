@@ -2,7 +2,7 @@ from binaryninja import *
 import csv
 from pathlib import Path
 
-from .models import UniSymbol, GhidraSymbol
+from ..models import UniSymbol, GhidraSymbol
 
 
 def get_symbol_type(symbol):
@@ -90,7 +90,7 @@ def export_unisymbols_to_csv(bv: BinaryView):
 
 
 PluginCommand.register(
-    "Ghidra\\Export Symbols (Uni-CSV)",
+    "UniSymbol\\Export Unified Symbols",
     "Export symbols in UniSymbol CSV format.",
     export_unisymbols_to_csv,
 )

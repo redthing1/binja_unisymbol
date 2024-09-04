@@ -1,7 +1,7 @@
 {
   "plugin": {
-    "name": "Ghidra Utils",
-    "description": "Import/export data from Ghidra",
+    "name": "UniSymbol",
+    "description": "Import/Export symbols from/to IDA, Ghidra, and Binary Ninja",
     "type": [
       "binaryview",
       "ui"

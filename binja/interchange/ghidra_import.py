@@ -2,7 +2,7 @@ import csv
 
 from binaryninja import *
 
-from .models import GhidraSymbol, UniSymbol
+from ..models import GhidraSymbol, UniSymbol
 
 
 def read_ghidra_symbols(input_path: Path) -> List[GhidraSymbol]:
@@ -271,7 +271,7 @@ def import_ghidra_symbols(bv: BinaryView):
 
 
 PluginCommand.register(
-    "Ghidra\\Import Symbols (CSV)",
+    "UniSymbol\\Import Ghidra Symbols (CSV)",
     "Import symbols from a Ghidra-exported CSV file.",
     import_ghidra_symbols,
 )
