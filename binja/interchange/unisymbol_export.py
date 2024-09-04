@@ -76,7 +76,7 @@ class ExportUniSymbolsTask(BackgroundTask):
         BackgroundTask.__init__(self, "Exporting UniSymbols...", can_cancel=True)
         self.bv = bv
         self.output_file = output_file
-        self.log = bv.create_logger("UniSymbolExport")
+        self.log = bv.create_logger("UniSymbol")
 
     def run(self):
         export_unicsv(self.log, self.bv, Path(self.output_file))
@@ -90,7 +90,7 @@ def export_unisymbols_to_csv(bv: BinaryView):
 
 
 PluginCommand.register(
-    "UniSymbol\\Export Unified Symbols",
+    "UniSymbol\\Export UniSymbols",
     "Export symbols in UniSymbol CSV format.",
     export_unisymbols_to_csv,
 )
