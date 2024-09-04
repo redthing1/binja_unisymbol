@@ -2,16 +2,16 @@ import csv
 
 from binaryninja import *
 
-from ..models import GhidraSymbol, UniSymbol
+from ..models import GhidraCSVSymbol, UniSymbol
 
 
-def read_ghidra_symbols(input_path: Path) -> List[GhidraSymbol]:
+def read_ghidra_symbols(input_path: Path) -> List[GhidraCSVSymbol]:
     """read symbols from the ghidra-exported csv file"""
     symbols = []
     with open(input_path) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            symbol = GhidraSymbol(
+            symbol = GhidraCSVSymbol(
                 name=row["Name"],
                 loc=row["Location"],
                 type=row["Type"],
@@ -23,14 +23,14 @@ def read_ghidra_symbols(input_path: Path) -> List[GhidraSymbol]:
     return symbols
 
 
-def filter_importable_symbols(symbols: List[GhidraSymbol]) -> List[GhidraSymbol]:
+def filter_importable_symbols(symbols: List[GhidraCSVSymbol]) -> List[GhidraCSVSymbol]:
     """filter out symbols that are not importable"""
     return [symbol for symbol in symbols if not (symbol.is_unknown())]
 
 
 def convert_ghidra_symbols_to_uni_symbols(
     bv: BinaryView,
-    gh_symbols: List[GhidraSymbol],
+    gh_symbols: List[GhidraCSVSymbol],
 ) -> List[UniSymbol]:
     """convert ghidra symbols to unified symbols"""
     uni_symbols = []

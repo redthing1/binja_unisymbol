@@ -2,7 +2,7 @@ from binaryninja import *
 import csv
 from pathlib import Path
 
-from ..models import UniSymbol, GhidraSymbol
+from ..models import UniSymbol, GhidraCSVSymbol
 
 
 def get_symbol_type(symbol):

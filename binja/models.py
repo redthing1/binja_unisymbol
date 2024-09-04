@@ -44,7 +44,7 @@ class UniSymbol:
 
 
 @dataclass
-class GhidraSymbol:
+class GhidraCSVSymbol:
     # "Name","Location","Type","Namespace","Source","Reference Count","Offcut Ref Count"
     name: str
     loc: str
