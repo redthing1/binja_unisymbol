@@ -29,6 +29,8 @@ class UniSymbol:
     source: Optional[str] = None
     # the reason the symbol was created
     reason: SymbolReason = SymbolReason.AUTO_ANALYSIS
+    # whether the symbol should override existing symbols
+    priority: int = 1
 
     def is_external(self) -> bool:
         return self.module is not None

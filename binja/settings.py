@@ -31,6 +31,19 @@ my_settings.register_setting(
     ),
 )
 
+# int: Ghidra symbol priority
+my_settings.register_setting(
+    "unisymbol.ghidra_symbol_priority",
+    json.dumps(
+        {
+            "title": "Ghidra Symbol Priority",
+            "description": "The priority of Ghidra symbols.",
+            "default": 1,
+            "type": "number",
+        }
+    ),
+)
+
 # bool: treat all IDA symbols as auto-analysis
 my_settings.register_setting(
     "unisymbol.ida_symbols_as_auto_analysis",
@@ -40,6 +53,19 @@ my_settings.register_setting(
             "description": "Treat all imported IDA symbols as auto-analysis.",
             "default": False,
             "type": "boolean",
+        }
+    ),
+)
+
+# int: IDA symbol priority
+my_settings.register_setting(
+    "unisymbol.ida_symbol_priority",
+    json.dumps(
+        {
+            "title": "IDA Symbol Priority",
+            "description": "The priority of IDA symbols.",
+            "default": 1,
+            "type": "number",
         }
     ),
 )

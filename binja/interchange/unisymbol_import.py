@@ -17,15 +17,23 @@ def read_unisymbols(input_path: Path) -> List[UniSymbol]:
     ida_symbols_force_auto = my_settings.get_bool(
         "unisymbol.ida_symbols_as_auto_analysis"
     )
+    ida_symbol_priority = my_settings.get_integer("unisymbol.ida_symbol_priority")
     ghidra_symbols_force_auto = my_settings.get_bool(
         "unisymbol.ghidra_symbols_as_auto_analysis"
     )
+    ghidra_symbol_priority = my_settings.get_integer("unisymbol.ghidra_symbol_priority")
 
     def apply_corrections(row: dict):
-        if row["source"] == "ida" and ida_symbols_force_auto:
-            row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
-        if row["source"] == "ghidra" and ghidra_symbols_force_auto:
-            row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
+        if row["source"] == "ida":
+            row["priority"] = ida_symbol_priority
+            if ida_symbols_force_auto:
+                row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
+
+        if row["source"] == "ghidra":
+            row["priority"] = ghidra_symbol_priority
+            if ghidra_symbols_force_auto:
+                row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
+
         return row
 
     with open(input_path) as csvfile:
@@ -40,6 +48,7 @@ def read_unisymbols(input_path: Path) -> List[UniSymbol]:
                 module=row["module"] if row["module"] else None,
                 source=row["source"],
                 reason=UniSymbol.SymbolReason[row["reason"]],
+                priority=int(row.get("priority", 1)),
             )
 
             symbols.append(symbol)
@@ -111,17 +120,20 @@ class ImportUniSymbolsTask(BackgroundTask):
             is_redefinition = False
 
             if existing_symbol is not None:
-                # check if the symbol there is automatically generated
-                # and if the unisymbol is user-defined
+                # determine if the existing symbol should be replaced
+                existing_symbol_is_auto = existing_symbol.auto
+                new_symbol_is_user = (
+                    symbol.reason == UniSymbol.SymbolReason.USER_DEFINED
+                )
+                new_symbol_is_high_priority = symbol.priority > 1
                 if (
-                    existing_symbol.auto
-                    and symbol.reason == UniSymbol.SymbolReason.USER_DEFINED
-                ):
+                    existing_symbol_is_auto and new_symbol_is_user
+                ) or new_symbol_is_high_priority:
                     # remove the existing symbol
                     self.bv.undefine_auto_symbol(existing_symbol)
                     is_redefinition = True
                 else:
-                    # skip; the symbol already here takes precedence
+                    # ignore the new symbol; the symbol already here takes precedence
                     self.log.log_debug(
                         f"skipping {symbol.name} at 0x{symbol.addr:x} (already defined)"
                     )
