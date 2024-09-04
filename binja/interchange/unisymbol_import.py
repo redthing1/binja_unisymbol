@@ -90,7 +90,7 @@ class ImportUniSymbolsTask(BackgroundTask):
         BackgroundTask.__init__(self, "importing unisymbols...", can_cancel=True)
         self.bv = bv
         self.symbol_file = symbol_file
-        self.log = bv.create_logger("UniSymbolUtils")
+        self.log = bv.create_logger("UniSymbol")
 
     def run(self):
         # read and process symbols from the file
