@@ -49,6 +49,7 @@ class GhidraSymbol:
     name: str
     loc: str
     # Types: Data Label,External Data,External Function,Function,Instruction Label,Thunk Function,Unknown
+    # https://github.com/NationalSecurityAgency/ghidra/blob/184180d54dbdf3db3c030ead3772f6f8f46f9d72/Ghidra/Framework/SoftwareModeling/src/main/java/ghidra/program/model/symbol/SymbolUtilities.java#L899C2-L949C3
     type: str
     namespace: str
     source: str
