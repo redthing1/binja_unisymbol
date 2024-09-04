@@ -74,14 +74,21 @@ def get_binja_symbol_type(symbol: UniSymbol):
 
 
 # define tags based on analysis source
-TAG_BINARYNINJA = "Binary Ninja"
+TAG_BINJA = "Binja"
 TAG_GHIDRA = "Ghidra"
 TAG_IDA = "IDA"
-TAG_OTHER_USER = "Other User"
-SOURCE_EMOJIS = {
+TAG_OTHER_USER = "User"
+SOURCE_TAG_TYPES = {
+    "binja": TAG_BINJA,
+    "ghidra": TAG_GHIDRA,
+    "ida": TAG_IDA,
+    "user": TAG_OTHER_USER,
+}
+SOURCE_TAG_ICONS = {
     "binja": "🍶",
     "ghidra": "🐲",
     "ida": "🔬",
+    "user": "👤",
 }
 
 
@@ -216,20 +223,16 @@ class ImportUniSymbolsTask(BackgroundTask):
 
     def create_tag_types(self):
         """create tag types if they don't exist"""
-        if not self.bv.get_tag_type(TAG_BINARYNINJA):
-            self.bv.create_tag_type(TAG_BINARYNINJA, "🍶")
-        if not self.bv.get_tag_type(TAG_GHIDRA):
-            self.bv.create_tag_type(TAG_GHIDRA, "🐲")
-        if not self.bv.get_tag_type(TAG_IDA):
-            self.bv.create_tag_type(TAG_IDA, "🔬")
-        if not self.bv.get_tag_type(TAG_OTHER_USER):
-            self.bv.create_tag_type(TAG_OTHER_USER, "👤")
+        for source, tag_type in SOURCE_TAG_TYPES.items():
+            if not self.bv.get_tag_type(tag_type):
+                icon = SOURCE_TAG_ICONS[source]
+                self.bv.create_tag_type(tag_type, icon)
 
     def add_source_tag(self, symbol: UniSymbol):
         """add a tag based on the symbol source"""
         source = symbol.source.lower()
-        if source in SOURCE_EMOJIS:
-            tag_type = f"{source.capitalize()}"
+        if source in SOURCE_TAG_TYPES:
+            tag_type = SOURCE_TAG_TYPES[source]
             self.bv.add_tag(symbol.addr, tag_type, symbol.summary())
         else:
             self.log.log_warn(f"unknown source for symbol: {symbol.source}")
