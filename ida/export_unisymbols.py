@@ -43,7 +43,14 @@ def get_symbol_type(ea):
 def get_symbol_reason(ea):
     flags = ida_bytes.get_flags(ea)
     if ida_bytes.has_user_name(flags):
-        return UniSymbolReason.USER_DEFINED
+        # Check if the name is not auto-generated
+        name = ida_name.get_ea_name(ea)
+        if (
+            not name.startswith("sub_")
+            and not name.startswith("loc_")
+            and not name.startswith("unk_")
+        ):
+            return UniSymbolReason.USER_DEFINED
     return UniSymbolReason.AUTO_ANALYSIS
 
 
@@ -72,7 +79,12 @@ def export_unisymbols(output_path):
             ["name", "addr", "type", "module", "source", "reason", "ref_count"]
         )
 
-        for ea, name in idautils.Names():
+        # Set to keep track of processed addresses
+        processed_addresses = set()
+
+        # First, process all functions (including sub_...)
+        for ea in idautils.Functions():
+            name = ida_name.get_ea_name(ea)
             sym_type = get_symbol_type(ea)
             module = get_symbol_module(ea)
             reason = get_symbol_reason(ea)
@@ -83,14 +95,33 @@ def export_unisymbols(output_path):
                     name,
                     "0x{:X}".format(ea),
                     sym_type,
-                    (
-                        module if module is not None else ""
-                    ),  # Empty string if module is None
+                    module if module is not None else "",
                     "ida",
                     reason,
                     ref_count,
                 ]
             )
+            processed_addresses.add(ea)
+
+        # Then, process all named symbols that haven't been processed yet
+        for ea, name in idautils.Names():
+            if ea not in processed_addresses:
+                sym_type = get_symbol_type(ea)
+                module = get_symbol_module(ea)
+                reason = get_symbol_reason(ea)
+                ref_count = get_reference_count(ea)
+
+                writer.writerow(
+                    [
+                        name,
+                        "0x{:X}".format(ea),
+                        sym_type,
+                        module if module is not None else "",
+                        "ida",
+                        reason,
+                        ref_count,
+                    ]
+                )
 
     print(f"Exported UniSymbols to: {output_path}")
 
