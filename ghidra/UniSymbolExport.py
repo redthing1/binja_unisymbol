@@ -64,6 +64,10 @@ def get_symbol_module(symbol):
     )  # Adjust "ram" based on your main program space
 
 
+def format_address(addr):
+    return "0x{:x}".format(addr)
+
+
 def export_unisymbols_to_csv(output_path):
     program = getCurrentProgram()
     symbol_table = program.getSymbolTable()
@@ -86,7 +90,14 @@ def export_unisymbols_to_csv(output_path):
             reason = get_symbol_reason(symbol)
 
             writer.writerow(
-                [name, hex(addr), sym_type, module if module else "", source, reason]
+                [
+                    name,
+                    format_address(addr),
+                    sym_type,
+                    module if module else "",
+                    source,
+                    reason,
+                ]
             )
 
     print("Exported UniSymbols to: " + output_path)
