@@ -46,6 +46,52 @@ class UniSymbol:
 
 
 @dataclass
+class UniXref:
+    class ReferenceType(Enum):
+        UNKNOWN = 0
+        CALL = 1
+        JUMP = 2
+        DATA_READ = 3
+        DATA_WRITE = 4
+        IMPORT = 5
+        EXPORT = 6
+
+    # Source of the reference
+    from_addr: int
+    # Target of the reference
+    to_addr: int
+    # Type of reference
+    ref_type: ReferenceType
+    # Module containing the source address (None for main binary)
+    from_module: Optional[str] = None
+    # Module containing the target address (None for main binary)
+    to_module: Optional[str] = None
+    # Symbol at the source address (if any)
+    from_symbol: Optional[str] = None
+    # Symbol at the target address (if any)
+    to_symbol: Optional[str] = None
+    # Disassembler-specific metadata (optional)
+    metadata: Optional[dict] = None
+
+    def is_external(self) -> bool:
+        return self.from_module != self.to_module
+
+    def summary(self) -> str:
+        from_loc = f"{self.from_module}:" if self.from_module else ""
+        from_loc += f"{self.from_addr:08x}"
+        from_loc += f" ({self.from_symbol})" if self.from_symbol else ""
+
+        to_loc = f"{self.to_module}:" if self.to_module else ""
+        to_loc += f"{self.to_addr:08x}"
+        to_loc += f" ({self.to_symbol})" if self.to_symbol else ""
+
+        return f"{from_loc} -> {to_loc} [{self.ref_type.name}]"
+
+    def __repr__(self) -> str:
+        return f"UniXref(from={self.from_addr:08x}, to={self.to_addr:08x}, type={self.ref_type.name})"
+
+
+@dataclass
 class GhidraCSVSymbol:
     # "Name","Location","Type","Namespace","Source","Reference Count","Offcut Ref Count"
     name: str
