@@ -108,9 +108,6 @@ class ImportUniSymbolsTask(BackgroundTask):
                 if (
                     existing_func_is_auto and new_symbol_is_user
                 ) or new_symbol_is_high_priority:
-                    print(
-                        f"existing_func_is_auto: {existing_func_is_auto}, new_symbol_is_user: {new_symbol_is_user}, new_symbol_is_high_priority: {new_symbol_is_high_priority}"
-                    )
                     # we should replace the existing function
                     is_redefinition = True
                     # we have stored existing_function
