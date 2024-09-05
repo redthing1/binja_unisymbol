@@ -14,6 +14,7 @@ my_settings.register_setting(
             "description": "Enable importers for non-UniSymbol data from other tools (e.g. Ghidra, IDA)",
             "default": False,
             "type": "boolean",
+            "ignore": ["SettingsProjectScope", "SettingsResourceScope"],
         }
     ),
 )

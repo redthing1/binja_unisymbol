@@ -10,69 +10,6 @@ from ..models import UniSymbol
 from ..settings import my_settings
 
 
-def read_unisymbols(input_path: Path) -> List[UniSymbol]:
-    """read symbols from the unisymbol csv file"""
-    symbols = []
-
-    ida_symbols_force_auto = my_settings.get_bool(
-        "unisymbol.ida_symbols_as_auto_analysis"
-    )
-    ida_symbol_priority = my_settings.get_integer("unisymbol.ida_symbol_priority")
-    ghidra_symbols_force_auto = my_settings.get_bool(
-        "unisymbol.ghidra_symbols_as_auto_analysis"
-    )
-    ghidra_symbol_priority = my_settings.get_integer("unisymbol.ghidra_symbol_priority")
-
-    def apply_corrections(row: dict):
-        if row["source"] == "ida":
-            row["priority"] = ida_symbol_priority
-            if ida_symbols_force_auto:
-                row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
-
-        if row["source"] == "ghidra":
-            row["priority"] = ghidra_symbol_priority
-            if ghidra_symbols_force_auto:
-                row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
-
-        return row
-
-    with open(input_path) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            row = apply_corrections(row)
-
-            symbol = UniSymbol(
-                name=row["name"],
-                addr=int(row["addr"], 16),
-                type=UniSymbol.SymbolType[row["type"]],
-                module=row["module"] if row["module"] else None,
-                source=row["source"],
-                reason=UniSymbol.SymbolReason[row["reason"]],
-                priority=int(row.get("priority", 1)),
-            )
-
-            symbols.append(symbol)
-    return symbols
-
-
-def get_binja_symbol_type(symbol: UniSymbol):
-    type_mapping = {
-        UniSymbol.SymbolType.FUNCTION: SymbolType.FunctionSymbol,
-        UniSymbol.SymbolType.DATA_LABEL: SymbolType.DataSymbol,
-        UniSymbol.SymbolType.INSTRUCTION_LABEL: SymbolType.LocalLabelSymbol,
-        UniSymbol.SymbolType.THUNK_FUNCTION: SymbolType.FunctionSymbol,
-    }
-
-    if symbol.is_external():
-        return (
-            SymbolType.ImportedFunctionSymbol
-            if symbol.type == UniSymbol.SymbolType.FUNCTION
-            else SymbolType.ImportedDataSymbol
-        )
-
-    return type_mapping.get(symbol.type)
-
-
 # define tags based on analysis source
 TAG_BINJA = "Binja"
 TAG_GHIDRA = "Ghidra"
@@ -102,7 +39,7 @@ class ImportUniSymbolsTask(BackgroundTask):
     def run(self):
         # read and process symbols from the file
         self.log.log_info(f"reading symbols from {self.symbol_file}")
-        uni_symbols = read_unisymbols(Path(self.symbol_file))
+        uni_symbols = self.read_unisymbols(Path(self.symbol_file))
 
         # define tag types as necessary
         self.create_tag_types()
@@ -187,7 +124,7 @@ class ImportUniSymbolsTask(BackgroundTask):
                     continue
 
             # create appropriate definition based on symbol type
-            binja_sym_type = get_binja_symbol_type(symbol)
+            binja_sym_type = self.get_binja_symbol_type(symbol)
 
             if binja_sym_type is not None:
                 # if it's a function, mark the region as a function
@@ -265,6 +202,71 @@ class ImportUniSymbolsTask(BackgroundTask):
 
         # mark finished
         self.finish()
+
+    def read_unisymbols(self, input_path: Path) -> List[UniSymbol]:
+        """read symbols from the unisymbol csv file"""
+        symbols = []
+
+        ida_symbols_force_auto = my_settings.get_bool(
+            "unisymbol.ida_symbols_as_auto_analysis", self.bv
+        )
+        ida_symbol_priority = my_settings.get_integer(
+            "unisymbol.ida_symbol_priority", self.bv
+        )
+        ghidra_symbols_force_auto = my_settings.get_bool(
+            "unisymbol.ghidra_symbols_as_auto_analysis", self.bv
+        )
+        ghidra_symbol_priority = my_settings.get_integer(
+            "unisymbol.ghidra_symbol_priority", self.bv
+        )
+
+        def apply_corrections(row: dict):
+            if row["source"] == "ida":
+                row["priority"] = ida_symbol_priority
+                if ida_symbols_force_auto:
+                    row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
+
+            if row["source"] == "ghidra":
+                row["priority"] = ghidra_symbol_priority
+                if ghidra_symbols_force_auto:
+                    row["reason"] = UniSymbol.SymbolReason.AUTO_ANALYSIS.name
+
+            return row
+
+        with open(input_path) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                row = apply_corrections(row)
+
+                symbol = UniSymbol(
+                    name=row["name"],
+                    addr=int(row["addr"], 16),
+                    type=UniSymbol.SymbolType[row["type"]],
+                    module=row["module"] if row["module"] else None,
+                    source=row["source"],
+                    reason=UniSymbol.SymbolReason[row["reason"]],
+                    priority=int(row.get("priority", 1)),
+                )
+
+                symbols.append(symbol)
+        return symbols
+
+    def get_binja_symbol_type(self, symbol: UniSymbol):
+        type_mapping = {
+            UniSymbol.SymbolType.FUNCTION: SymbolType.FunctionSymbol,
+            UniSymbol.SymbolType.DATA_LABEL: SymbolType.DataSymbol,
+            UniSymbol.SymbolType.INSTRUCTION_LABEL: SymbolType.LocalLabelSymbol,
+            UniSymbol.SymbolType.THUNK_FUNCTION: SymbolType.FunctionSymbol,
+        }
+
+        if symbol.is_external():
+            return (
+                SymbolType.ImportedFunctionSymbol
+                if symbol.type == UniSymbol.SymbolType.FUNCTION
+                else SymbolType.ImportedDataSymbol
+            )
+
+        return type_mapping.get(symbol.type)
 
     def create_tag_types(self):
         """create tag types if they don't exist"""
