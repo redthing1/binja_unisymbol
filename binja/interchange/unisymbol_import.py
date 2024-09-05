@@ -122,17 +122,20 @@ class ImportUniSymbolsTask(BackgroundTask):
             if self.cancelled:
                 break
 
-            # check for existing symbol at the address
-            existing_symbol = self.bv.get_symbol_at(symbol.addr)
             is_redefinition = False
 
+            # check for existing symbol at the address
+            existing_symbol = self.bv.get_symbol_at(symbol.addr)
+            existing_function = None
+            containing_funcs = self.bv.get_functions_containing(symbol.addr)
+
+            new_symbol_is_user = symbol.reason == UniSymbol.SymbolReason.USER_DEFINED
+            new_symbol_is_high_priority = symbol.priority > 1
+
+            # if a symbol already exists at the address, check if it should be replaced
             if existing_symbol is not None:
-                # determine if the existing symbol should be replaced
                 existing_symbol_is_auto = existing_symbol.auto
-                new_symbol_is_user = (
-                    symbol.reason == UniSymbol.SymbolReason.USER_DEFINED
-                )
-                new_symbol_is_high_priority = symbol.priority > 1
+
                 if (
                     existing_symbol_is_auto and new_symbol_is_user
                 ) or new_symbol_is_high_priority:
@@ -147,6 +150,42 @@ class ImportUniSymbolsTask(BackgroundTask):
                     total_skipped += 1
                     continue
 
+            # check what functions start at this address
+            functions_matching_symbol = [
+                func for func in containing_funcs if func.start == symbol.addr
+            ]
+            if len(functions_matching_symbol) > 0:
+                single_function_matches_symbol = len(functions_matching_symbol) == 1
+                # if multiple functions match the address, skip the symbol; we can't handle this
+                if not single_function_matches_symbol:
+                    self.log.log_warn(
+                        f"skipping {symbol.name} at 0x{symbol.addr:x} (multiple functions start at this address)"
+                    )
+                    total_skipped += 1
+                    continue
+
+                # there is already a function at this address, determine if it should be replaced
+                existing_function = functions_matching_symbol[0]
+                existing_func_is_auto = existing_function.auto
+
+                if (
+                    existing_func_is_auto and new_symbol_is_user
+                ) or new_symbol_is_high_priority:
+                    print(
+                        f"existing_func_is_auto: {existing_func_is_auto}, new_symbol_is_user: {new_symbol_is_user}, new_symbol_is_high_priority: {new_symbol_is_high_priority}"
+                    )
+                    # we should replace the existing function
+                    is_redefinition = True
+                    # we have stored existing_function
+                    # it will be updated instead of removed and redefined
+                else:
+                    # ignore the new symbol; the function already here takes precedence
+                    self.log.log_debug(
+                        f"skipping {symbol.name} at 0x{symbol.addr:x} (already defined as function)"
+                    )
+                    total_skipped += 1
+                    continue
+
             # create appropriate definition based on symbol type
             binja_sym_type = get_binja_symbol_type(symbol)
 
@@ -156,7 +195,13 @@ class ImportUniSymbolsTask(BackgroundTask):
                     UniSymbol.SymbolType.FUNCTION,
                     UniSymbol.SymbolType.THUNK_FUNCTION,
                 ]:
-                    self.bv.create_user_function(symbol.addr)
+                    if existing_function is not None:
+                        # a function is already defined here; update the existing function
+                        existing_function.name = symbol.name
+                    else:
+                        # define a function at the address
+                        new_func = self.bv.create_user_function(symbol.addr)
+                        new_func.name = symbol.name
 
                 binja_sym_namespace = symbol.module if symbol.is_external() else None
                 binja_sym = Symbol(
