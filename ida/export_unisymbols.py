@@ -4,6 +4,7 @@ import idautils
 import ida_bytes
 import ida_funcs
 import ida_name
+import ida_entry
 import ida_segment
 import ida_xref
 import ida_kernwin
@@ -31,9 +32,18 @@ def get_symbol_type(ea):
     if ida_bytes.is_code(flags):
         func = ida_funcs.get_func(ea)
         if func:
-            if func.flags & ida_funcs.FUNC_THUNK:
-                return UniSymbolType.THUNK_FUNCTION
-            return UniSymbolType.FUNCTION
+            # Check if it's the start of a function
+            if func.start_ea == ea:
+                if func.flags & ida_funcs.FUNC_THUNK:
+                    return UniSymbolType.THUNK_FUNCTION
+                return UniSymbolType.FUNCTION
+
+            # Check if it's a named location within a function
+            name = ida_name.get_ea_name(ea)
+            if name.startswith("def_") or name.startswith("loc_"):
+                return UniSymbolType.INSTRUCTION_LABEL
+
+        # It's code, but not the start of a function and not a named jump target
         return UniSymbolType.INSTRUCTION_LABEL
     elif ida_bytes.is_data(flags):
         return UniSymbolType.DATA_LABEL
