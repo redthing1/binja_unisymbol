@@ -187,7 +187,7 @@ class ImportUniSymbolsTask(BackgroundTask):
         )
         for sym_type, count in stats.items():
             self.log.log_info(f"  {sym_type.name}: {count}")
-        
+
         self.bv.commit_undo_actions(undo_state)
 
         # show a message box with the final statistics
@@ -239,9 +239,20 @@ class ImportUniSymbolsTask(BackgroundTask):
             for row in reader:
                 row = apply_corrections(row)
 
+                # try parsing addr as int
+                addr_val = None
+                try:
+                    addr_val = int(row["addr"], 16)
+                except ValueError:
+                    # invalid address, skip this row
+                    self.log.log_warn(
+                        f"invalid address {row['addr']} for symbol {row['name']}"
+                    )
+                    continue
+
                 symbol = UniSymbol(
                     name=row["name"],
-                    addr=int(row["addr"], 16),
+                    addr=addr_val,
                     type=UniSymbol.SymbolType[row["type"]],
                     module=row["module"] if row["module"] else None,
                     source=row["source"],
