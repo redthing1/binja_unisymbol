@@ -29,6 +29,8 @@ class ImportUniXrefsTask(BackgroundTask):
         total_imported = 0
         total_skipped = 0
 
+        undo_state = self.bv.begin_undo_actions()
+
         for xref in uni_xrefs:
             if self.cancelled:
                 break
@@ -116,6 +118,8 @@ class ImportUniXrefsTask(BackgroundTask):
         self.log.log_info(f"total xrefs imported: {total_imported}")
         for ref_type, count in stats.items():
             self.log.log_info(f"  {ref_type}: {count}")
+        
+        self.bv.commit_undo_actions(undo_state)
 
         # Show a message box with the final statistics
         show_message_box(

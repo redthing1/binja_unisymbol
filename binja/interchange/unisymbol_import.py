@@ -55,6 +55,8 @@ class ImportUniSymbolsTask(BackgroundTask):
         total_auto_analysis = 0
         total_redefined = 0
 
+        undo_state = self.bv.begin_undo_actions()
+
         for symbol in uni_symbols:
             if self.cancelled:
                 break
@@ -185,6 +187,8 @@ class ImportUniSymbolsTask(BackgroundTask):
         )
         for sym_type, count in stats.items():
             self.log.log_info(f"  {sym_type.name}: {count}")
+        
+        self.bv.commit_undo_actions(undo_state)
 
         # show a message box with the final statistics
         show_message_box(
