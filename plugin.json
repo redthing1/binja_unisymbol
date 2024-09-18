@@ -1,9 +1,13 @@
 {
+  "pluginmetadataversion": 2,
   "name": "UniSymbol",
   "description": "Import/Export symbols from/to IDA, Ghidra, and Binary Ninja",
   "type": [
     "binaryview",
     "ui"
+  ],
+  "api": [
+    "python3"
   ],
   "license": {
     "name": "MIT",
