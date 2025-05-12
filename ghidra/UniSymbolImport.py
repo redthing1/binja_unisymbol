@@ -63,6 +63,8 @@ def import_unisymbols(csv_path, monitor):
             
             monitor.setProgress(i * 100 / total_symbols)
             monitor.setMessage("Importing symbol {} of {}".format(i+1, total_symbols))
+
+            print "Processing symbol: {}".format(row)
             
             # Extract data from CSV row
             name = row['name']
@@ -93,7 +95,7 @@ def import_unisymbols(csv_path, monitor):
                             func.setThunk(True)
                 elif SYMBOL_TYPES[sym_type] == 'data_label':
                     symbol_table.createLabel(address, name, source_type)
-                    DataUtilities.createData(program, address, None, 1, False, DataUtilities.ClearDataMode.CLEAR_ALL_UNDEFINED_CONFLICT_DATA)
+                    DataUtilities.createData(program, address, DataType.DEFAULT, 1, False, DataUtilities.ClearDataMode.CLEAR_ALL_UNDEFINED_CONFLICT_DATA)
                 elif SYMBOL_TYPES[sym_type] == 'instruction_label':
                     symbol_table.createLabel(address, name, source_type)
                 else:
@@ -108,6 +110,16 @@ def import_unisymbols(csv_path, monitor):
             except InvalidInputException as e:
                 print "Error importing symbol {} at {}: {}".format(name, address, str(e))
                 skipped_count += 1
+            except Exception as e:
+                print "Unexpected error importing symbol {} at {}: {}".format(name, address, str(e))
+                skipped_count += 1
+            finally:
+                # update the monitor
+                monitor.setProgress(i * 100 / total_symbols)
+                monitor.setMessage("Processed {} symbols".format(i + 1))
+        
+        monitor.setProgress(100)
+        monitor.setMessage("Import complete")
     
     print "Finished importing symbols"
     print "Imported: {}, Skipped: {}".format(imported_count, skipped_count)
