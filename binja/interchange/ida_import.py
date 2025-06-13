@@ -171,7 +171,7 @@ class ImportIdaMapSymbolsTask(BackgroundTask):
                     UniSymbol.SymbolType.FUNCTION,
                     UniSymbol.SymbolType.THUNK_FUNCTION,
                 ]:
-                    self.bv.create_auto_function(symbol.addr)
+                    self.bv.add_function(symbol.addr, auto_discovered=True)
 
                 binja_sym = Symbol(
                     binja_sym_type,

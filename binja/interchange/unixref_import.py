@@ -75,11 +75,11 @@ class ImportUniXrefsTask(BackgroundTask):
                         continue
 
                     # get the function at the from address
-                    target_func = self.bv.get_function_at(xref.to_addr)
-                    if target_func is None:
-                        raise ValueError(f"target function not found: {xref.to_addr:x}")
+                    source_func = self.bv.get_function_at(xref.from_addr)
+                    if source_func is None:
+                        raise ValueError(f"source function not found: {xref.from_addr:x}")
 
-                    target_func.add_user_code_ref(xref.from_addr, xref.to_addr)
+                    source_func.add_user_code_ref(xref.from_addr, xref.to_addr)
                 elif xref.ref_type == UniXref.ReferenceType.JUMP:
                     # ignore jumps
                     total_skipped += 1

@@ -434,7 +434,7 @@ class ImportUniSymbolsTask(BackgroundTask):
         type_mapping = {
             UniSymbol.SymbolType.FUNCTION: SymbolType.FunctionSymbol,
             UniSymbol.SymbolType.DATA_LABEL: SymbolType.DataSymbol,
-            UniSymbol.SymbolType.INSTRUCTION_LABEL: SymbolType.DataSymbol,
+            UniSymbol.SymbolType.INSTRUCTION_LABEL: SymbolType.LocalLabelSymbol,
             UniSymbol.SymbolType.THUNK_FUNCTION: SymbolType.FunctionSymbol,
         }
 
