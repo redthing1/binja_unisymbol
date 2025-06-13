@@ -70,3 +70,16 @@ my_settings.register_setting(
         }
     ),
 )
+
+# bool: allow IDA MAP import to overwrite user-defined symbols
+my_settings.register_setting(
+    "unisymbol.ida_map_allow_overwrite_user",
+    json.dumps(
+        {
+            "title": "Allow IDA MAP to Overwrite User-Defined Symbols",
+            "description": "Allow IDA MAP import to overwrite user-defined symbols. When disabled, user-defined symbols are protected from being overwritten by IDA MAP imports.",
+            "default": False,
+            "type": "boolean",
+        }
+    ),
+)

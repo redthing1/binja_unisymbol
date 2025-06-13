@@ -129,3 +129,18 @@ class GhidraCSVSymbol:
 
     def __repr__(self) -> str:
         return f"GhidraSymbol({self.name} @ {self.loc}, type={self.type}, ns={self.namespace}, source={self.source}, ref_count={self.ref_count})"
+
+
+@dataclass
+class IdaMapSymbol:
+    segment_id: int
+    offset: int
+    name: str
+    
+    @property
+    def full_address(self) -> str:
+        """Get the full segmented address as a string."""
+        return f"{self.segment_id:04X}:{self.offset:08X}"
+    
+    def __repr__(self) -> str:
+        return f"IdaMapSymbol({self.name} @ {self.full_address})"
